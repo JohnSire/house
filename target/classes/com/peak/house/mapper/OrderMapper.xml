@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.peak.house.dao.OrderMapper">
+
+	<!-- 模糊查询sql片段 -->
+	<sql id="query_where">
+
+		<if test="id !=null and id !=''">
+			and o.id LIKE '%${id}%'
+		</if>
+		<if test="uid !=null and uid !=''">
+			and u.id LIKE '%${uid}%'
+		</if>
+		<if test="nickname !=null and nickname !=''">
+			and u.nickname LIKE '%${nickname}%'
+		</if>
+		<if test="phone !=null and phone !=''">
+			and u.phone LIKE '%${phone}%'
+		</if>
+		<if test="aid !=null and aid !=''">
+			and a.id LIKE '%${aid}%'
+		</if>
+		<if test="anickname !=null and anickname !=''">
+			and a.nickname LIKE '%${anickname}%'
+		</if>
+		<if test="aphone !=null and aphone !=''">
+			and a.phone LIKE '%${aphone}%'
+		</if>
+		<if test="hid !=null and hid !=''">
+			and h.id LIKE '%${hid}%'
+		</if>
+		<if test="village !=null and village !=''">
+			and h.village LIKE '%${village}%'
+		</if>
+		
+
+	</sql>
+
+	<!-- 根据id查询 -->
+	<select id="findById" parameterType="long" resultType="order">
+		SELECT o.*,u.phone ,u.nickname ,
+		a.phone AS aphone ,a.nickname AS anickname, h.village
+		FROM `order` o
+		LEFT JOIN house h ON h.id = o.hid
+		LEFT JOIN users u ON u.id = o.uid
+		LEFT JOIN agent a ON a.id = o.aid
+		WHERE o.id = #{value}
+	</select>
+
+	<!-- 组合条件查询 -->
+	<select id="findList" parameterType="order" resultType="order">
+		SELECT o.*,u.phone ,u.nickname ,
+		a.phone AS aphone ,a.nickname AS anickname, h.village
+		FROM `order` o
+		LEFT JOIN house h ON h.id = o.hid
+		LEFT JOIN users u ON u.id = o.uid
+		LEFT JOIN agent a ON a.id = o.aid
+		<where>
+			<include refid="query_where"></include>
+		</where>
+
+		limit #{current},#{pageSize}
+	</select>
+
+	<!-- 记录数 -->
+	<select id="findCount" parameterType="order" resultType="int">
+		SELECT count(o.id) 
+		FROM `order` o
+		LEFT JOIN house h ON h.id = o.hid
+		LEFT JOIN users u ON u.id = o.uid
+		LEFT JOIN agent a ON a.id = o.aid
+		<where>
+			<include refid="query_where"></include>
+		</where>
+	</select>
+
+	<insert id="insert" parameterType="order">
+		insert into `order` (
+		addtime,
+		uid,
+		hid, aid, realPrice)
+		values ( #{addtime},
+		#{uid,jdbcType=BIGINT},
+		#{hid,jdbcType=BIGINT}, #{aid,jdbcType=BIGINT},
+		#{realprice,jdbcType=DOUBLE})
+	</insert>
+
+	<delete id="deldetByIds" parameterType="String">
+		DELETE FROM `order` WHERE
+		id in ${value}
+	</delete>
+
+	<update id="update" parameterType="order">
+		update `order`
+		set 
+		addtime = #{addtime,jdbcType=TIMESTAMP},
+		uid = #{uid,jdbcType=BIGINT},
+		hid = #{hid,jdbcType=BIGINT},
+		aid = #{aid,jdbcType=BIGINT},
+		realPrice = #{realprice,jdbcType=DOUBLE}
+		where id = #{id,jdbcType=BIGINT},
+	</update>
+
+
+
+</mapper>

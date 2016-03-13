@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.peak.house.dao.AttentionMapper">
+
+	<!-- 模糊查询sql片段 -->
+	<sql id="query_where">
+		LEFT JOIN users u ON u.id = a.uid
+		LEFT JOIN sell s ON s.id = a.sid
+		LEFT JOIN house h ON h.id = s.hid
+		LEFT JOIN agent ag ON ag.id = s.aid
+		LEFT JOIN base_district bd ON h.areaid = bd.DistrictCode 
+		LEFT JOIN base_city bc ON  bd.CityCode = bc.CityCode 
+		LEFT JOIN base_province bp ON bc.CityCode = bp.ProvinceCode 
+	</sql>
+
+	<!-- 根据id查询 -->
+	<select id="findById" parameterType="long" resultType="attention">
+	</select>
+
+	<!-- 组合条件查询 -->
+	<select id="findList" parameterType="attention" resultType="attention">
+	</select>
+	
+	<!-- 记录数 -->
+	<select id="findCount" parameterType="attention" resultType="int">
+	</select>
+	
+	<!-- 组合条件查询 -->
+	<select id="findAttentionList" parameterType="attention" resultType="house">
+		SELECT h.* ,s.id as sid,s.title ,s.content, ag.phone,ag.nickname, bp.ProvinceName AS province ,
+		bc.CityName AS city ,bd.DistrictName As district,a.id AS atid
+		FROM attention a
+		<include refid="query_where"></include>
+		WHERE u.id = #{uid}
+	</select>
+	
+	<!-- 记录数 -->
+	<select id="findAttentionCount" parameterType="attention" resultType="int">
+		SELECT COUNT(u.id)
+		FROM attention a
+		<include refid="query_where"></include>
+		WHERE u.id = #{uid}
+	</select>
+	
+	
+	
+	<insert id="insert" parameterType="attention">
+		INSERT INTO attention(uid,sid) VALUES(#{uid},#{sid})
+	</insert>
+	
+	<delete id="deldetByIds" parameterType="String">
+		DELETE FROM attention WHERE id in ${value}		
+	</delete>
+	
+	<update id="update" parameterType="attention">
+	</update>
+
+	
+
+</mapper>

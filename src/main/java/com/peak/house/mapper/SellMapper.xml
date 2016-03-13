@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.peak.house.dao.SellMapper">
+
+	<!-- 模糊查询sql片段 -->
+	<sql id="query_where">
+
+		<if test="id !=null and id !=''">
+			and s.id LIKE '%${id}%'
+		</if>
+		<if test="title !=null and title !=''">
+			and title LIKE '%${title}%'
+		</if>
+		<if test="content !=null and content !=''">
+			and content LIKE '%${content}%'
+		</if>
+		<if test="hid !=null and hid !=''">
+			and hid LIKE '%${hid}%'
+		</if>
+		<if test="aid !=null and aid !=''">
+			and ( aid LIKE '%${aid}%' or a.nickname LIKE '%${aid}%' or  a.phone LIKE '%${aid}%' )
+		</if>
+
+	</sql>
+
+	<!-- 根据id查询 -->
+	<select id="findById" parameterType="long" resultType="Sell">
+		SELECT *
+		FROM `Sell` WHERE id = #{value}
+	</select>
+
+	<!-- 组合条件查询 -->
+	<select id="findList" parameterType="Sell" resultType="Sell">
+		SELECT s.* ,a.nickname AS agent
+		FROM sell s
+		LEFT JOIN agent a ON a.id = s.aid
+		<where>
+			<include refid="query_where"></include>
+		</where>
+
+		limit #{current},#{pageSize}
+	</select>
+
+	<!-- 记录数 -->
+	<select id="findCount" parameterType="Sell" resultType="int">
+		SELECT count(s.id)
+		FROM sell s
+		LEFT JOIN agent a ON a.id = s.aid
+		<where>
+			<include refid="query_where"></include>
+		</where>
+	</select>
+
+	<insert id="insert" parameterType="Sell">
+		insert into sell (title,
+		content,
+		addtime, hid, aid)
+		values ( #{title,jdbcType=VARCHAR},
+		#{content,jdbcType=VARCHAR},
+		#{addtime,jdbcType=TIMESTAMP},
+		#{hid,jdbcType=BIGINT}, #{aid,jdbcType=BIGINT})
+	</insert>
+
+	<delete id="deldetByIds" parameterType="String">
+		DELETE FROM Sell WHERE id
+		in ${value}
+	</delete>
+
+	<update id="update" parameterType="Sell">
+		update sell
+		set title = #{title,jdbcType=VARCHAR},
+		content = #{content,jdbcType=VARCHAR},
+		addtime = #{addtime,jdbcType=TIMESTAMP},
+		hid = #{hid,jdbcType=BIGINT},
+		aid = #{aid,jdbcType=BIGINT}
+		
+		where id = #{id,jdbcType=BIGINT}
+	</update>
+
+
+
+</mapper>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.peak.house.dao.UsersMapper">
+
+	<!-- 模糊查询sql片段 -->
+	<sql id="query_where">
+	
+		<if test="id !=null and id !=''">
+			and id LIKE '%${id}%'
+		</if>
+		<if test="nickname !=null and nickname !=''">
+			and nickname LIKE '%${nickname}%'
+		</if>
+		<if test="phone !=null and phone !=''">
+			and phone LIKE '%${phone}%'
+		</if>
+		<if test="type !=null and type !=''">
+			and type LIKE '%${type}%'
+		</if>
+		
+	</sql>
+
+	<!-- 根据phone和 pwd查询 -->
+	<select id="findByPhone" parameterType="users" resultType="users">
+		SELECT *
+		FROM `users` WHERE phone = #{phone} and password = #{password} 
+		<if test="type !=null and type !=''">
+			and type LIKE '%${type}%'
+		</if>
+	</select>
+
+	<!-- 根据id查询 -->
+	<select id="findById" parameterType="long" resultType="users">
+		SELECT *
+		FROM `users` WHERE id = #{value}
+	</select>
+
+	<!-- 组合条件查询 -->
+	<select id="findList" parameterType="users" resultType="users">
+		SELECT * FROM `users`
+		<where>
+			<include refid="query_where"></include>
+		</where>
+		
+		limit #{current},#{pageSize}
+	</select>
+	
+	<!-- 记录数 -->
+	<select id="findCount" parameterType="users" resultType="int">
+		SELECT count(id) FROM users
+		<where>
+			<include refid="query_where"></include>
+		</where>
+	</select>
+	
+	<insert id="insert" parameterType="users">
+		INSERT users(phone,password,nickname,gender,address) VALUES(#{phone},#{password},#{nickname},#{gender},#{address})
+	</insert>
+	
+	<delete id="deldetByIds" parameterType="String">
+		DELETE FROM users WHERE id in ${value}
+	</delete>
+	
+	<update id="update" parameterType="users">
+		UPDATE users SET phone= #{phone}, 
+		<if test="password !=null and password !=''">
+		 	password = #{password},
+		</if>
+		nickname =#{nickname} ,gender=#{gender} ,address =#{address} 
+		WHERE id = #{id}
+	</update>
+
+
+
+</mapper>

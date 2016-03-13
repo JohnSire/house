@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.peak.house.dao.HouseMapper">
+
+	<!-- 模糊查询sql片段 -->
+	<sql id="queryr_where">
+
+		<if test="sid !=null and sid !=''">
+			and s.id = #{sid}
+		</if>
+		<if test="id !=null and id !=''">
+			and h.id LIKE '%${id}%'
+		</if>
+		<if test="village !=null and village !=''">
+			and village LIKE '%${village}%'
+		</if>
+		<if test="xprice !=null and xprice !=''">
+			and price &gt; #{xprice}
+		</if>
+		<if test="pricex !=null and pricex !=''">
+			and price &lt; #{pricex}
+		</if>
+		<if test="acreage !=null and acreage !=''">
+			and acreage &gt; #{acreage}-10
+			and acreage &lt;
+			#{acreage}+10
+		</if>
+		<if test="hand !=null and hand !=''">
+			and hand = #{hand}
+		</if>
+		<if test="type !=null and type !=''">
+			and type = #{type}
+		</if>
+		<if test="orientation !=null and orientation !=''">
+			and orientation = #{orientation}
+		</if>
+		<if test="age !=null and age !='' and age==1 ">
+			and (age &lt; 5 or age=5)
+		</if>
+		<if test="age !=null and age !='' and age==2 ">
+			and age &gt; 5
+			and (age &lt; 10 or age=10)
+		</if>
+		<if test="age !=null and age !='' and age==3 ">
+			and age &gt; 10
+			and (age &lt; 20 or age=20)
+		</if>
+		<if test="age !=null and age !='' and age==4 ">
+			and age &gt; 20
+		</if>
+
+
+		<if test="floor !=null and floor !='' and floor==1 ">
+			and floor &lt; 8
+		</if>
+		<if test="floor !=null and floor !='' and floor==2 ">
+			and floor &gt; 8
+			and (floor &lt; 15 or floor=15)
+		</if>
+		<if test="floor !=null and floor !='' and floor==3 ">
+			and floor &gt; 15
+		</if>
+		<if test="areaid !=null and areaid !=''">
+			and areaid = #{areaid}
+		</if>
+
+
+	</sql>
+
+	<!-- 根据id查询 -->
+	<select id="findById" parameterType="long" resultType="House">
+		SELECT h.* , bp.ProvinceName AS province ,bp.ProvinceCode,
+		bc.CityName AS city ,bc.CityCode,bd.DistrictName As district ,bd.DistrictCode 
+		FROM house h 
+		LEFT JOIN base_district bd ON h.areaid = bd.DistrictCode 
+		LEFT JOIN base_city bc ON bd.CityCode = bc.CityCode 
+		LEFT JOIN base_province bp ON bc.CityCode = bp.ProvinceCode 
+		WHERE h.id = #{value}
+	</select>
+
+	<!-- 组合条件查询  查房子 -->
+	<select id="findList" parameterType="House" resultType="House">
+		SELECT h.* ,s.id as sid,s.title ,s.content, a.phone,a.nickname, bp.ProvinceName AS province ,
+		bc.CityName AS city ,bd.DistrictName As district
+		FROM house h
+		LEFT JOIN base_district bd ON h.areaid = bd.DistrictCode 
+		LEFT JOIN base_city bc ON  bd.CityCode = bc.CityCode 
+		LEFT JOIN base_province bp ON bc.CityCode = bp.ProvinceCode 
+		LEFT JOIN sell s ON h.id = s.hid 
+		LEFT JOIN agent a ON s.aid = a.id 
+		WHERE 1=1
+		GROUP BY h.id
+		<include refid="queryr_where"></include>
+
+		limit #{current},#{pageSize}
+	</select>
+	
+	<!-- 记录数 查房子-->
+	<select id="findCount" parameterType="House" resultType="int">
+		SELECT count(*) FROM house h
+		LEFT JOIN base_district bd ON h.areaid = bd.DistrictCode 
+		LEFT JOIN base_city bc ON  bd.CityCode = bc.CityCode 
+		LEFT JOIN base_province bp ON bc.CityCode = bp.ProvinceCode 
+		LEFT JOIN sell s ON h.id = s.hid 
+		LEFT JOIN agent a ON s.aid = a.id 
+		WHERE 1=1
+		<include refid="queryr_where"></include>
+	</select>
+	
+	
+	<!-- 组合条件查询  查售房信息 -->
+	<select id="findSellList" parameterType="House" resultType="House">
+		SELECT h.* ,s.id as sid,s.title ,s.content, a.phone,a.nickname, bp.ProvinceName AS province ,
+		bc.CityName AS city ,bd.DistrictName As district
+		FROM house h
+		LEFT JOIN base_district bd ON h.areaid = bd.DistrictCode 
+		LEFT JOIN base_city bc ON  bd.CityCode = bc.CityCode 
+		LEFT JOIN base_province bp ON bc.CityCode = bp.ProvinceCode 
+		LEFT JOIN sell s ON h.id = s.hid 
+		LEFT JOIN agent a ON s.aid = a.id 
+		WHERE 1=1
+		AND s.id is NOT NULL
+		<include refid="queryr_where"></include>
+		limit #{current},#{pageSize}
+	</select>
+	
+	<!-- 售房信息记录数 -->
+	<select id="findSellCount" parameterType="House" resultType="int">
+		SELECT count(*) FROM house h
+		LEFT JOIN base_district bd ON h.areaid = bd.DistrictCode 
+		LEFT JOIN base_city bc ON  bd.CityCode = bc.CityCode 
+		LEFT JOIN base_province bp ON bc.CityCode = bp.ProvinceCode 
+		LEFT JOIN sell s ON h.id = s.hid 
+		LEFT JOIN agent a ON s.aid = a.id 
+		WHERE 1=1
+		AND s.id is NOT NULL
+		<include refid="queryr_where"></include>
+	</select>
+
+
+	<insert id="insert" parameterType="House">
+		insert into house ( village,
+		price,
+		unitprice, acreage, hand,
+		type, orientation, age,
+		floor, downpay, month,
+		monthpay, image, areaid
+		)
+		values ( #{village,jdbcType=VARCHAR}, #{price,jdbcType=DOUBLE},
+		#{unitprice,jdbcType=DOUBLE}, #{acreage,jdbcType=DOUBLE},
+		#{hand,jdbcType=INTEGER},
+		#{type,jdbcType=INTEGER}, #{orientation,jdbcType=VARCHAR}, #{age,jdbcType=INTEGER},
+		#{floor,jdbcType=INTEGER}, #{downpay,jdbcType=DOUBLE},
+		#{month,jdbcType=INTEGER},
+		#{monthpay,jdbcType=DOUBLE}, #{image,jdbcType=VARCHAR}, #{areaid,jdbcType=VARCHAR}
+		)
+	</insert>
+
+	<delete id="deldetByIds" parameterType="String">
+		DELETE FROM house WHERE
+		id in ${value}
+	</delete>
+
+	<update id="update" parameterType="House">
+		update house
+		set
+		village = #{village,jdbcType=VARCHAR},
+		price = #{price,jdbcType=DOUBLE},
+		unitprice = #{unitprice,jdbcType=DOUBLE},
+		acreage = #{acreage,jdbcType=DOUBLE},
+		hand = #{hand,jdbcType=INTEGER},
+		type = #{type,jdbcType=INTEGER},
+		orientation = #{orientation,jdbcType=VARCHAR},
+		age = #{age,jdbcType=INTEGER},
+		floor = #{floor,jdbcType=INTEGER},
+		downpay = #{downpay,jdbcType=DOUBLE},
+		month = #{month,jdbcType=INTEGER},
+		monthpay = #{monthpay,jdbcType=DOUBLE},
+		image = #{image,jdbcType=VARCHAR},
+		areaid = #{areaid,jdbcType=VARCHAR}
+		
+		where id = #{id,jdbcType=BIGINT}
+	</update>
+
+
+
+</mapper>
